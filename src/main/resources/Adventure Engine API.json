@@ -1,0 +1,129 @@
+{
+	"info": {
+		"name": "Adventure Engine API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Upload Book",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": []
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/books/upload",
+					"host": ["{{baseUrl}}"],
+					"path": ["books", "upload"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"pm.collectionVariables.set(\"bookId\", jsonData.id);",
+							"pm.test(\"Upload Successful\", function () { pm.response.to.have.status(200); });"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Get Catalog",
+			"request": {
+				"method": "GET",
+				"url": "{{baseUrl}}/books"
+			}
+		},
+		{
+			"name": "3. Start Game",
+			"request": {
+				"method": "POST",
+				"url": "{{baseUrl}}/play/{{bookId}}/start"
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"pm.collectionVariables.set(\"sessionId\", jsonData.sessionId);",
+							"pm.test(\"Session Started\", function () { pm.response.to.have.status(200); });"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Make Choice (Section 20)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "20"
+				},
+				"url": "{{baseUrl}}/play/session/{{sessionId}}/choose"
+			}
+		},
+		{
+			"name": "5. Make Choice (Section 200 - Trap)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "200"
+				},
+				"url": "{{baseUrl}}/play/session/{{sessionId}}/choose"
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"pm.test(\"Damage Applied\", function () { pm.expect(jsonData.hp).to.be.below(10); });"
+						],
+						"type": "text/javascript"
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Check Status",
+			"request": {
+				"method": "GET",
+				"url": "{{baseUrl}}/play/session/{{sessionId}}"
+			}
+		},
+		{
+			"name": "7. Preview Section (Stateless)",
+			"request": {
+				"method": "GET",
+				"url": "{{baseUrl}}/books/{{bookId}}/sections/20"
+			}
+		}
+	],
+	"variable": [
+		{ "key": "baseUrl", "value": "http://localhost:8080/api" },
+		{ "key": "bookId", "value": "" },
+		{ "key": "sessionId", "value": "" }
+	]
+}
